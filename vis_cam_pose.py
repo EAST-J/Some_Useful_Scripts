@@ -221,21 +221,31 @@ if __name__ == '__main__':
     import trimesh
     RT_list = []
     K_list = []
-    pkl_lis = sorted(glob("/remote-home/jiangshijian/data/HO3D_v3/train/{}/meta/*.pkl".format(seq_name)))[:100]
+    # pkl_lis = sorted(glob("/remote-home/jiangshijian/data/HO3D_v3/train/{}/meta/*.pkl".format(seq_name)))[:100]
+    npz_lis = sorted(glob("/remote-home/jiangshijian/homan/tmp_ho3d/{}/gt/obj_infos/*.npz".format(seq_name)))
     mesh = trimesh.load("/remote-home/jiangshijian/homan/local_data/datasets/ycbmodels/003_cracker_box/textured_simple_2000.obj", force="mesh")
-    for pkl_path in pkl_lis:
-        with open(pkl_path, "rb") as f:
-            data = pkl.load(f, encoding="latin1")
-        R_gt = data["objRot"]
-        R_gt, _ = cv2.Rodrigues(R_gt)
-        T_gt = data["objTrans"].reshape(3, 1)
-        RT_gt = np.concatenate([R_gt, T_gt], axis=1)
-        # transform the coordinate
-        RT_gt[1:] *= -1
+    # for pkl_path in pkl_lis:
+    #     with open(pkl_path, "rb") as f:
+    #         data = pkl.load(f, encoding="latin1")
+    #     R_gt = data["objRot"]
+    #     R_gt, _ = cv2.Rodrigues(R_gt)
+    #     T_gt = data["objTrans"].reshape(3, 1)
+    #     RT_gt = np.concatenate([R_gt, T_gt], axis=1)
+    #     # transform the coordinate
+    #     RT_gt[1:] *= -1
+    #     RT_gt = np.concatenate([RT_gt, np.array([[0, 0, 0, 1]])], axis=0)
+    #     RT_list.append(RT_gt)
+    #     K_list.append(data['camMat'])
+    # extrinsics = np.array(RT_list)
+    # camera_matrix = K_list[0]
+    for npz_path in npz_lis:
+        sample = np.load(npz_path)
+        R = sample["R"]
+        T = sample["T"].reshape(3, 1)
+        K = sample["K"]
+        RT_gt = np.concatenate([R, T], axis=1)
         RT_gt = np.concatenate([RT_gt, np.array([[0, 0, 0, 1]])], axis=0)
         RT_list.append(RT_gt)
-        K_list.append(data['camMat'])
     extrinsics = np.array(RT_list)
-    camera_matrix = K_list[0]
-
+    camera_matrix = K
     visualize(camera_matrix, extrinsics, mesh=mesh)

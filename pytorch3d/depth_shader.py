@@ -20,7 +20,9 @@ class DepthShader(nn.Module):
 
     def forward(self, fragments, meshes, cameras, **kwargs) -> torch.Tensor:
         """Sample without light."""
-        verts_depth = cameras.compute_depth_of_points(meshes.verts_padded())
+        world_to_view_transform = cameras.get_world_to_view_transform()
+        verts_depth = world_to_view_transform.transform_points(
+            meshes.verts_padded())[..., 2:3]
         faces = meshes.faces_packed()  # (F, 3)
         verts_depth = padded_to_packed(verts_depth)
         faces_depth = verts_depth[faces]
